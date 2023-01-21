@@ -21,13 +21,13 @@
   },
   "$167A": {
     "Don't disable cliping when starkilled": false,
-    "Invincible to star/cape/fire/bounce blk.": false,
+    "Invincible to star/cape/fire/bounce blk.": true,
     "Process when off screen": false,
     "Don't change into shell when stunned": false,
     "Can't be kicked like shell": false,
     "Process interaction with Mario every frame": false,
     "Gives power-up when eaten by yoshi": false,
-    "Don't use default interaction with Mario": false
+    "Don't use default interaction with Mario": true
   },
   "$1686": {
     "Inedible": false,
