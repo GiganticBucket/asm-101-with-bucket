@@ -1,0 +1,1 @@
+pixi.exe -l pixi/list.txt ../asm101.smc
