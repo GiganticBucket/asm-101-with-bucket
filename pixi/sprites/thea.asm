@@ -124,6 +124,9 @@ sprite_main:
     ; Interact with Mario
     JSR mario_interactions
 
+    ; Interact with Sprites
+    JSR sprite_interactions
+
     ; Handle Sprite Movement & Physics
     JSR sprite_movement
 
@@ -200,26 +203,39 @@ sprite_movement:
 .return
     RTS
 
-; ------------- MARIO INTERACTION ROUTINE ------------
-mario_interactions:
+; ------------- SPRITE INTERACTION ROUTINE ------------
+sprite_interactions:
+    ; Regular Sprite-sprite interaction code. 
+    LDY.b #!SprSize-1           ; sprite is being kicked
+-   LDA !14C8,y                 ; \ if the sprite status is..
+    CMP #$09                    ;  | ...shell-like
+    BCS +                       ; /
+--  DEY
+    BPL -
+    BRA .return
 
-    JSL !ROUTINE_ADDRESS_MARIO_SPRITE_INTERACTIONS
-    BCC .return
++   PHX
+    TYX
+    JSL $03B6E5|!BankB          ; get sprite clipping B routine
+    PLX
+    JSR GetSpriteClipping       ; get sprite clipping A routine
+    JSL $03B72B|!BankB          ; check for contact routine
+    BCC --
 
-    JSR checkifabove
-    BCC .hurtmario
+    ; so at this point here - we have contact with a 
+    ; shell-like object.
 
-    ; SAD THEA :(
-    LDA !STATE_SAD
-    STA !SPRITE_TABLE_STATE,x
+    PHX
+    TYX
 
-    ; Bounce Mario
-    JSL !ROUTINE_ADDRESS_JUMP_MARIO
-    ; Show Contact Graphic
-    JSL !ROUTINE_ADDRESS_DISPLAY_CONTACT
-    ; Play Sound Effect
-    LDA !SOUND_EFFECT_NUMBER
-    STA !SOUND_EFFECT_BANK
+    JSL $01AB72|!BankB          ; show sprite contact gfx routine
+
+    LDA #$02                    ; \ Kill thrown sprite
+    STA !14C8,x                 ; /
+
+    PLX
+
+    ; Custom sprite interaction here.
 
     DEC !SPRITE_TABLE_HEALTH,x
     LDA !SPRITE_TABLE_HEALTH,x
@@ -240,10 +256,43 @@ mario_interactions:
     LDA #$02
     STA !SPRITE_TABLE_STATUS,x
 
-    BRA .return
-.hurtmario
-    JSL !ROUTINE_ADDRESS_HURT_MARIO
+.return
+    RTS
 
+
+;--------------------------;
+; Sprite Clipping Routine  ;
+; Mostly borrowed from SMW ;
+;--------------------------;
+
+GetSpriteClipping:
+    LDA !E4,x
+    CLC : ADC #$03
+    STA $04
+    LDA !14E0,x
+    ADC #$00
+    STA $0A
+    LDA.b #$20          ; Width of sprite clipping
+    STA $06
+    LDA !D8,x
+    CLC : ADC #$06
+    STA $05
+    LDA !14D4,x
+    ADC #$00
+    STA $0B
+    LDA #$20                ; Height of sprite clipping
+    STA $07
+    RTS
+
+
+
+; ------------- MARIO INTERACTION ROUTINE ------------
+mario_interactions:
+
+    JSL !ROUTINE_ADDRESS_MARIO_SPRITE_INTERACTIONS
+    BCC .return
+
+    JSL !ROUTINE_ADDRESS_HURT_MARIO
 .return
     RTS
 
